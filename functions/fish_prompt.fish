@@ -140,6 +140,7 @@ end
 function is_lms_project -d "Check if project is a LMS project"
   set -l first_commit_message (git log --pretty=oneline --reverse 2> /dev/null| head -1 | awk -F ' ' '{$1=""; print $0}' | string trim)
   [ -n "$first_commit_message" ]; or return 1
+  [ "$first_commit_message" = 'Submission Repo Created' ]; or return 1
   return 0
 end
 
