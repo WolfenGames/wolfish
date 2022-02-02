@@ -8,3 +8,8 @@ cd themes
 git clone https://github.com/WolfenGames/wolfish ./wolfish
 omf theme wolfish
 ```
+
+# TODO:
+
+- [ ] Envronment specific variables to hide certain output from version checks
+- [ ] Locate python/java projects before doing timeout check

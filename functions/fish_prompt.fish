@@ -3,9 +3,8 @@
 function _prompt_wtc_lms -a color -d "Get the currently installed wtc-lms version"
   switch (uname)
     case Linux
-      if test -e ~/.config/wtc/config.yml
-        return
-      end
+      set -l does_exist (ls ~/.config/wtc/ 2>/dev/null | grep config.yml)
+      [ -n $does_exist ]; or return
     case Darwin
       if test -e /home/$USER/Library/Application\ Support/wtc/config.yml
         return
@@ -138,6 +137,27 @@ function get_user -a color -d "Get current user"
   echo -n -s $color (uname -a | awk -F ' ' '{print $2}')
 end
 
+function is_lms_project -d "Check if project is a LMS project"
+  set -l first_commit_message (git log --pretty=oneline --reverse 2> /dev/null| head -1 | awk -F ' ' '{$1=""; print $0}' | string trim)
+  [ -n "$first_commit_message" ]; or return 1
+  return 0
+end
+
+function is_lms_project_timeout -a color -d "Do lms specific things"
+  if test (math $CMD_DURATION / 1000) -gt 60
+    return 0
+  end
+  return 1
+end
+
+function lms_project_timeout -a color -d "Print out if there is potential lms failure"
+  echo -s -n $color 'Potential timeout during verification'
+end
+
+function lms_project_notification -a color -d "Checks if this is a LMS project"
+  echo -n -s $color '[🔥 LMS PROJECT]'
+end
+
 function fish_prompt
   set -l exit_code $status
 
@@ -158,11 +178,15 @@ function fish_prompt
   printf '\n'(get_user $blue)
   printf '%s@%s' $gray (_prompt_pwd)
   printf ' %s' (_prompt_git $gray $normal $orange $red $yellow $purple)
-  if test (math $CMD_DURATION / 1000) -gt 60
-    printf '\n'
-    printf '%sYou might run into a test time out during verification' $orange
+  if is_lms_project
+    printf '%s' (lms_project_notification $blue)
+    if is_lms_project_timeout
+      printf '\n'
+      printf '%s' (lms_project_timeout $orange)
+    end
   end
   printf '\n'
+
   set_color green
   printf '> '
 
