@@ -5,6 +5,6 @@ A custom built fish shell theme extension
 ```
 omf cd
 cd themes
-git clone WolfenGames/wolfish ./wolfish
+git clone https://github.com/WolfenGames/wolfish ./wolfish
 omf theme wolfish
 ```
