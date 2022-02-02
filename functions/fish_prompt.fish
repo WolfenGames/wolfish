@@ -37,7 +37,7 @@ end
 
 function _prompt_docker_compose_version -a color -d "Get Docker compose version"
   type -q docker-compose; or return
-  set -U DOCKER_COMPOSE_VERSION (docker-compose --version | awk -F 'v' '{print $3}')
+  set -U DOCKER_COMPOSE_VERSION (docker-compose --version | awk -F 'v' '{print $3}' | sed -r 's/,//g')
   [ -n $DOCKER_COMPOSE_VERSION ]; and echo -n -s $color $DOCKER_COMPOSE_VERSION
 end
 
@@ -53,17 +53,33 @@ function _prompt_rubies -a color -d 'Display current Ruby (rvm/rbenv)'
   [ -n $RUBY_VERSION ]; and echo -n -s $color $RUBY_VERSION
 end
 
-function _prompt_versions -a blue gray green orange red purple append
-  set -l prompt_wtc_lms (_prompt_wtc_lms $red)
-  set -l prompt_venv (_prompt_virtualenv $orange)
-  set -l prompt_java_version (_prompt_java_version $blue)
-  set -l prompt_maven_version (_prompt_maven_version $purple)
-  set -l prompt_rust_version (_prompt_rust_version $red)
-  set -l prompt_docker_compose_version (_prompt_docker_compose_version $blue)
-  set -l prompt_docker_version (_prompt_docker_version $orange)
-  set -l prompt_rubies (_prompt_rubies $red)
+function _prompt_versions -a blue gray green orange red purple cyan append
+  [ -z $wolfish_display_wtc_lms_version ]; or \
+    set -l prompt_wtc_lms (_prompt_wtc_lms $cyan)
 
-  echo -n -e -s "$prompt_wtc_lms $prompt_venv $prompt_java_version $prompt_maven_version $prompt_rust_version $prompt_docker_compose_version $prompt_docker_version $prompt_rubies" | string trim | string replace -ar " +" "$gray|" | tr -d '\n'
+  [ -z $wolfish_display_venv ]; or \
+    set -l prompt_venv (_prompt_virtualenv $orange)
+
+  [ -z $wolfish_display_ruby_version ]; or \
+    set -l prompt_rubies (_prompt_rubies $red)
+
+  [ -z $wolfish_display_java_version ]; or \
+    set -l prompt_java_version (_prompt_java_version $blue)
+
+  [ -z $wolfish_display_maven_version ]; or \
+    set -l prompt_maven_version (_prompt_maven_version $purple)
+
+  [ -z $wolfish_display_rust_version ]; or \
+   set -l prompt_rust_version (_prompt_rust_version $orange)
+
+  [ -z $wolfish_display_docker_composed_version ]; or \
+    set -l prompt_docker_compose_version (_prompt_docker_compose_version $blue)
+
+  [ -q $wolfish_display_docker_version ]; or \
+    set -l prompt_docker_version (_prompt_docker_version $orange)
+
+
+  echo -n -e -s "$prompt_wtc_lms $prompt_rust_version $prompt_rubies $prompt_venv $prompt_java_version $prompt_maven_version $prompt_docker_compose_version $prompt_docker_version" | string trim | string replace -ar " +" "$gray|" | tr -d '\n'
 end
 
 function _prompt_pwd
@@ -169,16 +185,17 @@ function fish_prompt
   set -l yellow (set_color yellow)
   set -l orange (set_color ff9900)
   set -l green (set_color green)
-  set -l purple (set_color 62A)
+  set -l purple (set_color 64F)
+  set -l cyan (set_color 6FF)
 
   printf $gray'<'
 
   _prompt_versions $blue $gray $green $orange $red
 
-  printf '%s> 🐺 %0.3fs' $gray (math $CMD_DURATION / 1000)
+  printf '%s/> 🐺 %0.3fs' $gray (math $CMD_DURATION / 1000)
   printf '\n'(get_user $blue)
   printf '%s@%s' $gray (_prompt_pwd)
-  printf ' %s' (_prompt_git $gray $normal $orange $red $yellow $purple)
+  printf ' %s' (_prompt_git $gray $normal $orange $red $yellow $purple $cyan)
   if is_lms_project
     printf '%s' (lms_project_notification $blue)
     if is_lms_project_timeout
